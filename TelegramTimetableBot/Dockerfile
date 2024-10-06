@@ -24,5 +24,5 @@ RUN dotnet publish "./TelegramTimetableBot.csproj" -c $BUILD_CONFIGURATION -o /a
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-RUN chown -R $APP_UID /app/.playwright/node/linux-x64/node
+RUN chown -R $APP_UID /app/.playwright/
 ENTRYPOINT ["dotnet", "TelegramTimetableBot.dll"]
