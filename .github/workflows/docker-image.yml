@@ -15,4 +15,4 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build ./TelegramTimetableBot/ --file ./TelegramTimetableBot/Dockerfile --tag telegram-timetable-bot && docker run telegram-timetable-bot --detach
+      run: docker build ./TelegramTimetableBot/ --file ./TelegramTimetableBot/Dockerfile --tag telegram-timetable-bot && docker run -d telegram-timetable-bot
