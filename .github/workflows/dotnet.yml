@@ -11,6 +11,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Stopping systemd service
+      run: sudo systemctl stop telegram-bot.service
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
@@ -19,3 +21,5 @@ jobs:
       run: dotnet test --no-build --verbosity normal
     - name: Publish
       run: dotnet publish -c Release -o /home/ubuntu/app
+    - name: Starting systemd service
+      run: sudo systemctl start telegram-bot.service
