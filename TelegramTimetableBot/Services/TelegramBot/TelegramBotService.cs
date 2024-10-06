@@ -150,8 +150,7 @@ public class TelegramBotService
             await page.SetViewportSizeAsync(1920, 1080);
 
             // Navigate to the page with the timetable
-            await page.GotoAsync("https://tsue.edupage.org/timetable/view.php?num=75&class=-1650");
-            //await page.GotoAsync("https://tsue.edupage.org/timetable/view.php?num=75&teacher=*1");
+            await page.GotoAsync("https://tsue.edupage.org/timetable/view.php");
 
             // Wait for network to be idle to ensure the page has fully loaded
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
