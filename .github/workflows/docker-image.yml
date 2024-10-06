@@ -13,4 +13,4 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker run --detach && docker container prune -f
+      run: docker run . --detach && docker container prune -f
