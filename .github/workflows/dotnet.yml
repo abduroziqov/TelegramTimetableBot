@@ -7,7 +7,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-runner
+    runs-on: self-hosted
 
     steps:
     - uses: actions/checkout@v4
