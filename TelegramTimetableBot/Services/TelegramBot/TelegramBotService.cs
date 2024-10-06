@@ -180,7 +180,7 @@ public class TelegramBotService
                 PreferCSSPageSize = true,
                 Format = "A4", // Set the page format to A4
                 PrintBackground = true, // Include background colors/images
-                PageRanges = "1",
+                PageRanges = "2",
             });
 
             _logger.LogInformation($"PDF file saved at: {pdfFilePath}");
