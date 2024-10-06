@@ -18,4 +18,4 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Publish
-      run: sudo dotnet publish -c Release -o /home/ubuntu/app
+      run: dotnet publish -c Release -o /home/ubuntu/app
