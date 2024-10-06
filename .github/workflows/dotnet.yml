@@ -21,9 +21,7 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
-    - name: Stop service
-      run: sudo systemctl stop telegram-bot.service
     - name: Copy files
       run: cp -r . /home/ubuntu/app
-    - name: Start service
-      run: sudo systemctl start telegram-bot.service
+    - name: Restart service
+      run: sudo systemctl restart telegram-bot.service
