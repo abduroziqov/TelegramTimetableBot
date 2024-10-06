@@ -141,8 +141,7 @@ public class TelegramBotService
             var playwright = await Playwright.CreateAsync();
             var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                Headless = true, // Run browser in headless mode (no UI)
-                ExecutablePath = OperatingSystem.IsWindows() ? @"C:\Program Files\Google\Chrome\Application\chrome.exe" : "/usr/bin/google-chrome-stable"
+                Headless = true
             });
             var page = await browser.NewPageAsync();
 
