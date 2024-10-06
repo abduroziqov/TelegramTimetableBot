@@ -15,6 +15,8 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+    - name: Stop daemon
+      run: sudo systemctl stop telegram-bot.service
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
@@ -24,4 +26,4 @@ jobs:
     - name: Publish
       run: sudo dotnet publish -c Release -o /home/ubuntu/app
     - name: Restart daemon
-      run: sudo systemctl restart telegram-bot.service
+      run: sudo systemctl start telegram-bot.service
