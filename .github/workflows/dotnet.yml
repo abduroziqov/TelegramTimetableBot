@@ -21,7 +21,7 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
-    - name: Copy files
-      run: cp -r . /home/ubuntu/app
-    - name: Restart service
+    - name: Publish
+      run: dotnet publish -c Release -o /home/ubuntu/app
+    - name: Restart daemon
       run: systemctl restart telegram-bot.service
