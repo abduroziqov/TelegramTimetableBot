@@ -4,7 +4,6 @@
 FROM mcr.microsoft.com/dotnet/runtime:8.0 AS base
 USER app
 WORKDIR /app
-RUN chown -R $APP_UID /app
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -25,4 +24,5 @@ RUN dotnet publish "./TelegramTimetableBot.csproj" -c $BUILD_CONFIGURATION -o /a
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+RUN chown -R $APP_UID /app/.playwright/node/linux-x64/node
 ENTRYPOINT ["dotnet", "TelegramTimetableBot.dll"]
