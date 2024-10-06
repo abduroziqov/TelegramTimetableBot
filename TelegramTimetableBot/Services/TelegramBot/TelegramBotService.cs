@@ -147,8 +147,8 @@ public class TelegramBotService
             var page = await browser.NewPageAsync();
 
             // Navigate to the page with the timetable
-            //await page.GotoAsync("https://tsue.edupage.org/timetable/view.php?num=75&class=-1650");
-            await page.GotoAsync("https://tsue.edupage.org/timetable/view.php?num=75&teacher=*1");
+            await page.GotoAsync("https://tsue.edupage.org/timetable/view.php?num=75&class=-1650");
+            //await page.GotoAsync("https://tsue.edupage.org/timetable/view.php?num=75&teacher=*1");
 
             // Wait for network to be idle to ensure the page has fully loaded
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
