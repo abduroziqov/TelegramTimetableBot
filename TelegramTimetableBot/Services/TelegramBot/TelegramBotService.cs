@@ -130,6 +130,8 @@ public class TelegramBotService
             );
 
             System.IO.File.Delete(pdfFilePath);
+
+            _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client:{chatId} Received");
         }
         else
         {
@@ -137,6 +139,8 @@ public class TelegramBotService
                 chatId: chatId,
                 text: "Failed to retrieve the timetable. Please try again later."
             );
+
+            _logger.LogError($"[DownloadTimetableAsPdfAsync] Client:{chatId} Error");
         }
     }
 
@@ -178,8 +182,6 @@ public class TelegramBotService
             });
 
             await browser.CloseAsync();
-
-            _logger.LogInformation($"PDF file saved at: {pdfFilePath}");
 
             return pdfFilePath;
         }
