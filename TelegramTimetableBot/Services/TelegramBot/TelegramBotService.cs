@@ -145,9 +145,6 @@ public class TelegramBotService
                 Headless = true
             });
             var page = await browser.NewPageAsync();
-            
-            // Set viewport size
-            await page.SetViewportSizeAsync(1920, 1080);
 
             // Navigate to the page with the timetable
             await page.GotoAsync("https://tsue.edupage.org/timetable/view.php");
