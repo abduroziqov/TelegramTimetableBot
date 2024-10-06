@@ -14,6 +14,7 @@ public class TelegramBotService
     private readonly ILogger<TelegramBotService> _logger;
     private ReceiverOptions _receiverOptions;
     public readonly List<long> _userIds = new List<long>();
+    private string _url = "https://tsue.edupage.org/timetable/view.php?num=77&class=-1651";
 
     public TelegramBotService(IConfiguration configuration, ILogger<TelegramBotService> logger)
     {
@@ -105,10 +106,16 @@ public class TelegramBotService
 
         await Task.CompletedTask;
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="botClient"></param>
+    /// <param name="chatId"></param>
+    /// <returns></returns>
     private async Task SendTimetablePdfAsync(ITelegramBotClient botClient, long chatId)
     {
-        // Call the method to download the timetable as PDF
-        string pdfFilePath = await DownloadTimetableAsPdf();
+        string pdfFilePath = await DownloadTimetableAsPdfAsync(_url);
 
         if (System.IO.File.Exists(pdfFilePath))
         {
@@ -116,7 +123,6 @@ public class TelegramBotService
 
             InputOnlineFile pdfFile = new InputOnlineFile(stream, "irb-61.pdf");
 
-            // Send the PDF file to the user
             await botClient.SendDocumentAsync(
                 chatId: chatId,
                 document: pdfFile,
@@ -127,14 +133,19 @@ public class TelegramBotService
         }
         else
         {
-            // Notify the user if the timetable download fails
             await botClient.SendTextMessageAsync(
                 chatId: chatId,
                 text: "Failed to retrieve the timetable. Please try again later."
             );
         }
     }
-    private async Task<string> DownloadTimetableAsPdf()
+
+    /// <summary>
+    /// Returns timetable from specific url
+    /// </summary>
+    /// <param name="url"></param>
+    /// <returns></returns>
+    private async Task<string> DownloadTimetableAsPdfAsync(string url)
     {
         try
         {
@@ -146,43 +157,29 @@ public class TelegramBotService
             });
             var page = await browser.NewPageAsync();
 
-            // Navigate to the page with the timetable
-            await page.GotoAsync("https://tsue.edupage.org/timetable/view.php");
-
-            // Wait for network to be idle to ensure the page has fully loaded
+            await page.GotoAsync(_url);
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-
             await page.ClickAsync("text='OK'");
-
-            // Wait a moment for the popup to be removed
             await page.WaitForTimeoutAsync(1000);
-
-            // Remove a specific div (for example, by its class or ID) using JavaScript
-            // Remove the top bar menu
             await page.WaitForSelectorAsync("#fitheight");
             await page.EvaluateAsync("document.getElementById('fitheight').childNodes[0].remove();");
-
-            // Wait a moment for the popup to be removed
             await page.WaitForTimeoutAsync(1000);
 
-            // Define the PDF file path
             string pdfFilePath = Path.Combine(Directory.GetCurrentDirectory(), "timetable.pdf");
 
-            // Generate the PDF and save it to the file path
             await page.PdfAsync(new PagePdfOptions
             {
                 Path = pdfFilePath,
                 Landscape = true,
                 PreferCSSPageSize = true,
-                Format = "A4", // Set the page format to A4
-                PrintBackground = true, // Include background colors/images
+                Format = "A4",
+                PrintBackground = true,
                 PageRanges = "2",
             });
 
-            _logger.LogInformation($"PDF file saved at: {pdfFilePath}");
-
-            // Close the browser
             await browser.CloseAsync();
+
+            _logger.LogInformation($"PDF file saved at: {pdfFilePath}");
 
             return pdfFilePath;
         }
