@@ -95,7 +95,8 @@ public class TelegramBotService
                 int userCount = await GetUserCountAsync();
                 await botClient.SendTextMessageAsync(
                     chatId: update.Message.Chat.Id,
-                    text: $"Hozirda bot bilan {userCount} foydalanuvchi aloqada bo'ldi."
+                    text: "Ushbu bo'lim ishlab chiqilmoqda"
+                    //text: $"Hozirda bot bilan {userCount} foydalanuvchi aloqada bo'ldi."
                 );
             }
         }
