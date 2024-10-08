@@ -5,6 +5,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Polling;
 using Microsoft.Playwright;
 using Telegram.Bot.Types.InputFiles;
+using System.Globalization;
 
 namespace TelegramTimetableBot.Service.Services.TelegramBot;
 
@@ -14,7 +15,8 @@ public class TelegramBotService
     private readonly ILogger<TelegramBotService> _logger;
     private ReceiverOptions _receiverOptions;
     public readonly List<long> _userIds = new List<long>();
-    private string _url = "https://tsue.edupage.org/timetable/view.php?num=77&class=-1650"; 
+    private string _url = "https://tsue.edupage.org/timetable/view.php?num=77&class=-1650";
+    private Task[] Tasks { get; set; } = Array.Empty<Task>();
 
     public TelegramBotService(IConfiguration configuration, ILogger<TelegramBotService> logger)
     {
@@ -59,11 +61,11 @@ public class TelegramBotService
                     ResizeKeyboard = true
                 };
 
-                await botClient.SendTextMessageAsync(
+                Tasks.Append(botClient.SendTextMessageAsync(
                     chatId: update.Message.Chat.Id,
                     text: welcomeMessage,
                     replyMarkup: replyKeyboardMarkup
-                );
+                ));
             }
             else if (update.Type == UpdateType.Message)
             {
@@ -71,32 +73,31 @@ public class TelegramBotService
 
                 if (messageText == "📅 Dars jadvali")
                 {
-                    await botClient.SendTextMessageAsync(
+                    Tasks.Append(botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
                         text: "Dars jadvali tayyorlanmoqda. Iltimos, kuting..."
-                    );
+                    ));
 
-                    Task SendTimetable = SendTimetablePdfAsync(botClient, update.Message.Chat.Id);
-
-                    await Task.WhenAll(SendTimetable);
+                    Tasks.Append(SendTimetablePdfAsync(botClient, update));
                 }
                 else if (messageText == "📞 Aloqa")
                 {
-                    await botClient.SendTextMessageAsync(
+                    Tasks.Append(botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
                         text: "\U0001f9d1‍💻Shikoyatlar, dasturdagi xatoliklar va taklif uchun quyidagi manzillar orqali bog'lanishigiz mumkin:\r\n\r\n☎️ Telefon: +998-33-035-69-28\r\n\r\n✈️ Telegram: @abdurozikov_k"
-                    );
+                    ));
                 }
                 else if (messageText == "📄 Ma'lumot")
                 {
-                    await botClient.SendTextMessageAsync(
+                    Tasks.Append(botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
                         text: "📌 Ushbu bot Toshkent Davlat Iqtisodiyot Universiteti talabalari uchun maxsus yaratilgan!\r\n\r\n\U0001f9d1‍💻 Dasturchi: @abdurozikov_k\r\n\r\n📢 Kanal: @tsueitclub"
-                    );
+                    ));
                 }
                 else if (messageText == "📊 Statistika")
                 {
                     int userCount = await GetUserCountAsync();
+
                     await botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
                         text: "Ushbu bo'lim ishlab chiqilmoqda"
@@ -107,7 +108,7 @@ public class TelegramBotService
         }
         catch(Exception ex)
         {
-            _logger.LogError($"[HandleUpdateAsync] {ex.Message}");
+            _logger.LogError($"[HandleUpdateAsync] (@{update.Message.From.Username ?? update.Message.From.FirstName}) {ex.Message}");
         }
     }
     private async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
@@ -118,41 +119,40 @@ public class TelegramBotService
     }
 
     /// <summary>
-    /// 
+    /// Send timetable to client
     /// </summary>
     /// <param name="botClient"></param>
-    /// <param name="chatId"></param>
+    /// <param name="update"></param>
     /// <returns></returns>
-    private async Task SendTimetablePdfAsync(ITelegramBotClient botClient, long chatId)
+    private async Task SendTimetablePdfAsync(ITelegramBotClient botClient, Update update)
     {
         string pdfFilePath = await DownloadTimetableAsPdfAsync(_url);
 
         if (System.IO.File.Exists(pdfFilePath))
         {
-            using Stream stream = System.IO.File.Open(pdfFilePath, FileMode.Open);
+            using (Stream stream = System.IO.File.Open(pdfFilePath, FileMode.Open))
+            {
+                InputOnlineFile pdfFile = new InputOnlineFile(stream, $"{Guid.NewGuid().ToString()}.pdf");
 
-            InputOnlineFile pdfFile = new InputOnlineFile(stream, $"irb-61-{DateTime.Now.ToString("hh:mm:ss")}.pdf");
+                await botClient.SendDocumentAsync(
+                    chatId: update.Message.Chat.Id,
+                    document: pdfFile,
+                    caption: $"📌irb-61 guruhining dars jadvali\r\n\r\nBoshqa guruh dars jadvalini olish uchun qaytadan \r\n\"📅 Dars jadvali\" tugmasini bosing! \r\n\r\nSana: {DateTime.Now.ToString("dd-MM-yyyy, HH:mm:ss")}"
+                );
 
-            Task Sending = botClient.SendDocumentAsync(
-                chatId: chatId,
-                document: pdfFile,
-                caption: $"📌irb-61 guruhining dars jadvali\r\n\r\nBoshqa guruh dars jadvalini olish uchun qaytadan \r\n\"📅 Dars jadvali\" tugmasini bosing! \r\n\r\nSana: {DateTime.Now.ToString("dd-MM-yyyy, HH:mm:ss")}"
-            );
+                System.IO.File.Delete(pdfFilePath);
+            }
 
-            await Task.WhenAll(Sending);
-
-            System.IO.File.Delete(pdfFilePath);
-
-            _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client:{chatId} Received");
+            _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client:{update.Message.From.Username ?? update.Message.From.FirstName} Received");
         }
         else
         {
             await botClient.SendTextMessageAsync(
-                chatId: chatId,
+                chatId: update.Message.Chat.Id,
                 text: "Failed to retrieve the timetable. Please try again later."
             );
 
-            _logger.LogError($"[DownloadTimetableAsPdfAsync] Client:{chatId} Error");
+            _logger.LogError($"[DownloadTimetableAsPdfAsync] Client:" + $" {update.Message.From.Username ?? update.Message.From.FirstName} Error");
         }
     }
 
