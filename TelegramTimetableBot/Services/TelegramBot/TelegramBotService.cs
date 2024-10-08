@@ -143,6 +143,8 @@ public class TelegramBotService
                 System.IO.File.Delete(pdfFilePath);
             }
 
+            await Task.WhenAll(Tasks);
+
             _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client:{update.Message.From.Username ?? update.Message.From.FirstName} Received");
         }
         else
