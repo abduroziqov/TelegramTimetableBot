@@ -60,7 +60,7 @@ public class TelegramBotService
                     ResizeKeyboard = true
                 };
 
-                Tasks.Append(botClient.SendTextMessageAsync(
+                await (botClient.SendTextMessageAsync(
                     chatId: update.Message.Chat.Id,
                     text: welcomeMessage,
                     replyMarkup: replyKeyboardMarkup
