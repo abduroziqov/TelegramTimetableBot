@@ -5,7 +5,6 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Polling;
 using Microsoft.Playwright;
 using Telegram.Bot.Types.InputFiles;
-using System.Globalization;
 
 namespace TelegramTimetableBot.Service.Services.TelegramBot;
 
@@ -16,7 +15,7 @@ public class TelegramBotService
     private ReceiverOptions _receiverOptions;
     public readonly List<long> _userIds = new List<long>();
     private string _url = "https://tsue.edupage.org/timetable/view.php?num=77&class=-1650";
-    private Task[] Tasks { get; set; } = Array.Empty<Task>();
+    private Task[] Tasks { get; set; } = new Task[10];
 
     public TelegramBotService(IConfiguration configuration, ILogger<TelegramBotService> logger)
     {
@@ -108,6 +107,10 @@ public class TelegramBotService
         }
         catch(Exception ex)
         {
+            await botClient.SendTextMessageAsync(
+                chatId: update.Message.Chat.Id,
+                text: "Too many requests. Please try later.");
+
             _logger.LogError($"[HandleUpdateAsync] (@{update.Message.From.Username ?? update.Message.From.FirstName}) {ex.Message}");
         }
     }
