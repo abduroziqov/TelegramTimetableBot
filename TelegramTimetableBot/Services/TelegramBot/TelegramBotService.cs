@@ -5,6 +5,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Polling;
 using Microsoft.Playwright;
 using Telegram.Bot.Types.InputFiles;
+using System.Net.Sockets;
 
 namespace TelegramTimetableBot.Service.Services.TelegramBot;
 
@@ -17,7 +18,7 @@ public class TelegramBotService
     private string _url = "https://tsue.edupage.org/timetable/view.php?num=77&class=-1650";
     private Task[] Tasks { get; set; } = Array.Empty<Task>();
     private Dictionary<long, DateTime> _lastTimetableRequestTime = new Dictionary<long, DateTime>();
-    private IBrowserContext Browser { get; set; }
+    private IBrowser Browser { get; set; }
 
     public TelegramBotService(IConfiguration configuration, ILogger<TelegramBotService> logger)
     {
@@ -25,18 +26,21 @@ public class TelegramBotService
         _logger = logger;
         _receiverOptions = new ReceiverOptions { AllowedUpdates = Array.Empty<UpdateType>() };
 
-        Browser = InitializeBrowser().Result;
+        InitializeBrowser();
     }
 
     /// <summary>
     /// Initializes single instance of browser
     /// </summary>
     /// <returns></returns>
-    private async Task<IBrowserContext> InitializeBrowser()
+    private async void InitializeBrowser()
     {
         var playwright = await Playwright.CreateAsync();
-
-        return await playwright.Chromium.LaunchPersistentContextAsync(OperatingSystem.IsWindows() ? @"C:\Program Files\Google\Chrome\Application\chrome.exe" : @"/usr/bin/google-chrome");
+        Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            ExecutablePath = OperatingSystem.IsWindows() ? @"C:\Program Files\Google\Chrome\Application\chrome.exe" : @"/usr/bin/google-chrome",
+            Headless = true
+        });
     }
 
     public async Task<User> GetMeAsync() => await _telegramBotClient.GetMeAsync();
