@@ -74,7 +74,7 @@ public class TelegramBotService
                 {
                     Tasks.Append(botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
-                        text: "Dars jadvali tayyorlanmoqda. Iltimos, kuting..."
+                        text: "Dars jadvali tayyorlanmoqda(biroz vaqt oladi). Iltimos, kuting..."
                     ));
 
                     Tasks.Append(SendTimetablePdfAsync(botClient, update));
