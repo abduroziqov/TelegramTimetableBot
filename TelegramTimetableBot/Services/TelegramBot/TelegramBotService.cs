@@ -5,6 +5,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Polling;
 using Microsoft.Playwright;
 using Telegram.Bot.Types.InputFiles;
+using System.Diagnostics;
 
 namespace TelegramTimetableBot.Service.Services.TelegramBot;
 
@@ -52,6 +53,10 @@ public class TelegramBotService
              {
                  long userId = update.Message.From.Id;
 
+                if (!_userIds.Contains(userId))
+                {
+                    _userIds.Add(userId);
+                }
                  // Add the user to the list if they haven't already started to bot 
                  if (!_userIds.Contains(userId))
                  {
