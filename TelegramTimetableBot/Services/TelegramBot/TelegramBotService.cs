@@ -5,7 +5,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Polling;
 using Microsoft.Playwright;
 using Telegram.Bot.Types.InputFiles;
-using System.Net.Sockets;
+using System.Diagnostics;
 
 namespace TelegramTimetableBot.Service.Services.TelegramBot;
 
@@ -16,31 +16,15 @@ public class TelegramBotService
     private ReceiverOptions _receiverOptions;
     public readonly List<long> _userIds = new List<long>();
     private string _url = "https://tsue.edupage.org/timetable/view.php?num=77&class=-1650";
-    private Task[] Tasks { get; set; } = Array.Empty<Task>();
+    private Task[] Tasks { get; set; } = new Task[10];
+
     private Dictionary<long, DateTime> _lastTimetableRequestTime = new Dictionary<long, DateTime>();
-    private IBrowser Browser { get; set; }
 
     public TelegramBotService(IConfiguration configuration, ILogger<TelegramBotService> logger)
     {
         _telegramBotClient = new TelegramBotClient(configuration["Secrets:BotToken"]!);
         _logger = logger;
         _receiverOptions = new ReceiverOptions { AllowedUpdates = Array.Empty<UpdateType>() };
-
-        InitializeBrowser();
-    }
-
-    /// <summary>
-    /// Initializes single instance of browser
-    /// </summary>
-    /// <returns></returns>
-    private async void InitializeBrowser()
-    {
-        var playwright = await Playwright.CreateAsync();
-        Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
-        {
-            ExecutablePath = OperatingSystem.IsWindows() ? @"C:\Program Files\Google\Chrome\Application\chrome.exe" : @"/usr/bin/google-chrome",
-            Headless = true
-        });
     }
 
     public async Task<User> GetMeAsync() => await _telegramBotClient.GetMeAsync();
@@ -49,87 +33,120 @@ public class TelegramBotService
     public async Task<int> GetUserCountAsync() => await Task.FromResult(_userIds.Count);
 
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
-     {
-         try
-         {
-             if (update.Type == UpdateType.Message && update.Message.Text == "/start")
-             {
-                 long userId = update.Message.From.Id;
+    {
+        try
+        {
+            if (update.Type == UpdateType.Message && update.Message.Text == "/start")
+            {
+                long userId = update.Message.From.Id;
 
-                 // Add the user to the list if they haven't already started to bot 
-                 if (!_userIds.Contains(userId))
-                 {
-                     _userIds.Add(userId);
-                 }
+                if (!_userIds.Contains(userId))
+                {
+                    _userIds.Add(userId);
+                }
 
-                 string username = update.Message.From.FirstName;
-                 string welcomeMessage = $"Assalomu alaykum {username}.\n\nSizga yordam bera olishim uchun pastdagi buyruqlardan birini tanlang 👇";
+                string username = update.Message.From.FirstName;
+                string welcomeMessage = $"Assalomu alaykum {username}.\n\nSizga yordam bera olishim uchun pastdagi buyruqlardan birini tanlang 👇";
 
-                 var replyKeyboardMarkup = new ReplyKeyboardMarkup(
-                     [
-                     [
-                         new KeyboardButton("📅 Dars jadvali"),
-                         new KeyboardButton("📞 Aloqa")
-                     ],
-                     [
-                         new KeyboardButton("📄 Ma'lumot"),
-                         new KeyboardButton("📊 Statistika")
-                     ]
-                     ])
-                 {
-                     ResizeKeyboard = true
-                 };
+                var replyKeyboardMarkup = new ReplyKeyboardMarkup(
+                    new[]
+                    {
+                    new[]
+                    {
+                        new KeyboardButton("📅 Dars jadvali"),
+                        new KeyboardButton("📞 Aloqa")
+                    },
+                    new[]
+                    {
+                        new KeyboardButton("📄 Ma'lumot"),
+                        new KeyboardButton("📊 Statistika")
+                    }
+                    })
+                {
+                    ResizeKeyboard = true
+                };
 
-                 await (botClient.SendTextMessageAsync(
-                     chatId: update.Message.Chat.Id,
-                     text: welcomeMessage,
-                     replyMarkup: replyKeyboardMarkup
-                 ));
-             }
-             else if (update.Type == UpdateType.Message)
-             {
-                 var messageText = update.Message.Text;
+                var sentMessage = await botClient.SendTextMessageAsync(
+                    chatId: update.Message.Chat.Id,
+                    text: welcomeMessage,
+                    replyMarkup: replyKeyboardMarkup
+                );
 
-                 if (messageText == "📅 Dars jadvali")
-                 {
-                     Tasks.Append(botClient.SendTextMessageAsync(
-                         chatId: update.Message.Chat.Id,
-                         text: "Dars jadvali tayyorlanmoqda(biroz vaqt oladi). Iltimos, kuting..."
-                     ));
+                // Store and delete the message after the action
+                //await DeleteMessageAfterActionAsync(botClient, update.Message.Chat.Id, sentMessage.MessageId);
+            }
+            else if (update.Type == UpdateType.Message)
+            {
+                var messageText = update.Message.Text;
+                long userId = update.Message.From.Id;
 
-                     Tasks.Append(SendTimetablePdfAsync(botClient, update));
-                 }
-                 else if (messageText == "📞 Aloqa")
-                 {
-                     Tasks.Append(botClient.SendTextMessageAsync(
-                         chatId: update.Message.Chat.Id,
-                         text: "\U0001f9d1‍💻Shikoyatlar, dasturdagi xatoliklar va taklif uchun quyidagi manzillar orqali bog'lanishigiz mumkin:\r\n\r\n☎️ Telefon: +998-33-035-69-28\r\n\r\n✈️ Telegram: @abdurozikov_k"
-                     ));
-                 }
-                 else if (messageText == "📄 Ma'lumot")
-                 {
-                     Tasks.Append(botClient.SendTextMessageAsync(
-                         chatId: update.Message.Chat.Id,
-                         text: "📌 Ushbu bot Toshkent Davlat Iqtisodiyot Universiteti talabalari uchun maxsus yaratilgan!\r\n\r\n\U0001f9d1‍💻 Dasturchi: @abdurozikov_k\r\n\r\n📢 Kanal: @" 
-                     ));
-                 }
-                 else if (messageText == "📊 Statistika")
-                 {
-                     int userCount = await GetUserCountAsync();
+                if (messageText == "📅 Dars jadvali")
+                {
+                    if (_lastTimetableRequestTime.TryGetValue(userId, out DateTime lastRequestTime))
+                    {
+                        TimeSpan timeSinceLastRequest = DateTime.UtcNow - lastRequestTime;
+                        if (timeSinceLastRequest.TotalHours < 1)
+                        {
+                            int minutesRemaining = 59 - timeSinceLastRequest.Minutes;
+                            int secondsRemaining = 59 - timeSinceLastRequest.Seconds;
 
-                     await botClient.SendTextMessageAsync(
-                         chatId: update.Message.Chat.Id,
-                         text: "Ushbu bo'lim ishlab chiqilmoqda"
-                     //text: $"Hozirda bot bilan {userCount} foydalanuvchi aloqada bo'ldi."
-                     );
-                 }
-             }
-         }
-         catch(Exception ex)
-         {
-             await botClient.SendTextMessageAsync(
-                 chatId: update.Message.Chat.Id,
-                 text: "Too many requests. Please try later.");
+                            var waitMessage = await botClient.SendTextMessageAsync(
+                                chatId: update.Message.Chat.Id,
+                                text: $"Siz dars jadvalini yaqinda oldingiz. Iltimos, {minutesRemaining} daqiqa {secondsRemaining} soniyadan keyin qayta urinib ko'ring."
+                            );
+
+                            //await DeleteMessageAfterActionAsync(botClient, update.Message.Chat.Id, waitMessage.MessageId);
+                            return;
+                        }
+                    }
+
+                    _lastTimetableRequestTime[userId] = DateTime.UtcNow;
+
+                    var preparingMessage = await botClient.SendTextMessageAsync(
+                        chatId: update.Message.Chat.Id,
+                        text: "Dars jadvali tayyorlanmoqda(biroz vaqt oladi). Iltimos, kuting..."
+                    );
+
+                    // await DeleteMessageAfterActionAsync(botClient, update.Message.Chat.Id, preparingMessage.MessageId);
+
+                    await SendTimetablePdfAsync(botClient, update);
+                }
+                else if (messageText == "📞 Aloqa")
+                {
+                    var contactMessage = await botClient.SendTextMessageAsync(
+                        chatId: update.Message.Chat.Id,
+                        text: "\U0001f9d1‍💻Shikoyatlar, dasturdagi xatoliklar va taklif uchun quyidagi manzillar orqali bog'lanishigiz mumkin:\r\n\r\n☎️ Telefon: +998-33-035-69-28\r\n\r\n✈️ Telegram: @abdurozikov_k"
+                    );
+
+                    //await DeleteMessageAfterActionAsync(botClient, update.Message.Chat.Id, contactMessage.MessageId);
+                }
+                else if (messageText == "📄 Ma'lumot")
+                {
+                    var infoMessage = await botClient.SendTextMessageAsync(
+                        chatId: update.Message.Chat.Id,
+                        text: "📌 Ushbu bot Toshkent Davlat Iqtisodiyot Universiteti talabalari uchun maxsus yaratilgan!\r\n\r\n\U0001f9d1‍💻 Dasturchi: @abdurozikov_k"
+                    );
+
+                    // Store and delete the message after action
+                    //await DeleteMessageAfterActionAsync(botClient, update.Message.Chat.Id, infoMessage.MessageId);
+                }
+                else if (messageText == "📊 Statistika")
+                {
+                    var statsMessage = await botClient.SendTextMessageAsync(
+                        chatId: update.Message.Chat.Id,
+                        text: "Ushbu bo'lim ishlab chiqilmoqda"
+                    );
+
+                    //await DeleteMessageAfterActionAsync(botClient, update.Message.Chat.Id, statsMessage.MessageId);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await botClient.SendTextMessageAsync(
+                chatId: update.Message.Chat.Id,
+                text: "Too many requests. Please try later."
+            );
 
             _logger.LogError($"[HandleUpdateAsync] (@{update.Message.From.Username ?? update.Message.From.FirstName}) {ex.Message}");
         }
@@ -167,6 +184,9 @@ public class TelegramBotService
     {
         string pdfFilePath = await DownloadTimetableAsPdfAsync(_url);
 
+        // Close Chrome instances after the timetable PDF is downloaded
+        CloseChromeInstances();
+
         if (System.IO.File.Exists(pdfFilePath))
         {
             using (Stream stream = System.IO.File.Open(pdfFilePath, FileMode.Open))
@@ -182,6 +202,8 @@ public class TelegramBotService
                 System.IO.File.Delete(pdfFilePath);
             }
 
+            await Task.WhenAll(Tasks);
+
             _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client:{update.Message.From.Username ?? update.Message.From.FirstName} Received");
         }
         else
@@ -195,6 +217,28 @@ public class TelegramBotService
         }
     }
 
+
+    private void CloseChromeInstances()
+    {
+        try
+        {
+            // Get all processes with the name "chrome"
+            Process[] chromeProcesses = Process.GetProcessesByName("chrome");
+
+            // Iterate through each process and kill it
+            foreach (Process process in chromeProcesses)
+            {
+                process.Kill();
+            }
+
+            _logger.LogInformation("All Chrome instances have been closed successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to close Chrome processes: {ex.Message}");
+        }
+    }
+
     /// <summary>
     /// Returns timetable from specific url
     /// </summary>
@@ -204,7 +248,13 @@ public class TelegramBotService
     {
         try
         {
-            var page = await Browser.NewPageAsync();
+            var playwright = await Playwright.CreateAsync();
+            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+            {
+                ExecutablePath = OperatingSystem.IsWindows() ? @"C:\Program Files\Google\Chrome\Application\chrome.exe" : @"/usr/bin/google-chrome",
+                Headless = true
+            });
+            var page = await browser.NewPageAsync();
 
             await page.GotoAsync(_url);
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
@@ -226,7 +276,7 @@ public class TelegramBotService
                 PageRanges = "2",
             });
 
-            await page.CloseAsync();
+            await browser.CloseAsync();
 
             return pdfFilePath;
         }
