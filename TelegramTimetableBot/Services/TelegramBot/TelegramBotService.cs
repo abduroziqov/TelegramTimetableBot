@@ -151,10 +151,10 @@ public class TelegramBotService
         }
     }
 
-    /*private async Task DeleteMessageAfterActionAsync(ITelegramBotClient botClient, long chatId, int messageId)
+    private async Task DeleteMessageAfterActionAsync(ITelegramBotClient botClient, long chatId, int messageId)
     {
         // Wait for a few seconds before deleting the message
-        await Task.Delay(5000); // 5 seconds delay
+        await Task.Delay(10000); // 10 seconds delay
 
         try
         {
@@ -164,7 +164,7 @@ public class TelegramBotService
         {
             _logger.LogError($"Error deleting message {messageId}: {ex.Message}");
         }
-    }*/
+    }
 
     private async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
