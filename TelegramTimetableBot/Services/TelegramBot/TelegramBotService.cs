@@ -283,7 +283,8 @@ public class TelegramBotService
             await page.EvaluateAsync("document.getElementById('fitheight').childNodes[0].remove();");
             await page.WaitForTimeoutAsync(1000);
 
-            string pdfFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Files", $"{Guid.NewGuid().ToString()}.pdf");
+           // string pdfFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Files", $"{Guid.NewGuid().ToString()}.pdf");
+            string pdfFilePath = Path.Combine("/tmp", $"{Guid.NewGuid()}.pdf");
 
             await page.PdfAsync(new PagePdfOptions
             {
