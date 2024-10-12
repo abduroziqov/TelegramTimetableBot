@@ -125,7 +125,7 @@ public class TelegramBotService
                 {
                     var infoMessage = await botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
-                        text: "📌 Ushbu bot Raqamli Iqtisodiyot Fakulteti uchun maxsus yaratilgan!\r\n\r\n\U0001f9d1‍💻 Dasturchi: @mister_xurshidbey\r\n\r\n📢 Kanal: @bek_sharpist"
+                        text: "📌 Ushbu bot Raqamli Iqtisodiyot Fakulteti uchun maxsus yaratilgan!\r\n\r\n\U0001f9d1‍💻 Dasturchi: @abdurozikov_k\r\n\r\n📢 Kanal: @bek_sharpist"
                     );
 
                     // Store and delete the message after action
@@ -186,7 +186,7 @@ public class TelegramBotService
         string pdfFilePath = await DownloadTimetableAsPdfAsync(_url);
 
         // Close Chrome instances after the timetable PDF is downloaded
-        CloseChromeInstances();
+        //CloseChromeInstances();
 
         if (System.IO.File.Exists(pdfFilePath))
         {
@@ -218,6 +218,7 @@ public class TelegramBotService
 
             _logger.LogError($"[DownloadTimetableAsPdfAsync] Client:" + $" {update.Message.From.Username ?? update.Message.From.FirstName} Error");
         }
+        CloseChromeInstances();
     }
 
 
