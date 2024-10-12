@@ -186,39 +186,52 @@ public class TelegramBotService
         string pdfFilePath = await DownloadTimetableAsPdfAsync(_url);
 
         // Close Chrome instances after the timetable PDF is downloaded
-        //CloseChromeInstances();
+        CloseChromeInstances();
 
-        if (System.IO.File.Exists(pdfFilePath))
+        try
         {
-            using (Stream stream = System.IO.File.Open(pdfFilePath, FileMode.Open))
+            if (System.IO.File.Exists(pdfFilePath))
             {
-                InputOnlineFile pdfFile = new InputOnlineFile(stream, $"{Guid.NewGuid()}.pdf");
+                using (Stream stream = System.IO.File.Open(pdfFilePath, FileMode.Open))
+                {
+                    InputOnlineFile pdfFile = new InputOnlineFile(stream, $"{Guid.NewGuid()}.pdf");
 
-                await botClient.SendDocumentAsync(
-                    chatId: update.Message.Chat.Id,
-                    document: pdfFile,
-                    caption: $"📌irb-61 guruhining dars jadvali\r\n\r\nBoshqa guruh dars jadvalini olish uchun qaytadan \r\n\"📅 Dars jadvali\" tugmasini bosing! \r\n\r\nSana: {DateTime.Now.ToString("dd-MM-yyyy, HH:mm:ss")}"
-                );
+                    await botClient.SendDocumentAsync(
+                        chatId: update.Message.Chat.Id,
+                        document: pdfFile,
+                        caption: $"📌irb-61 guruhining dars jadvali\r\n\r\nBoshqa guruh dars jadvalini olish uchun qaytadan \r\n\"📅 Dars jadvali\" tugmasini bosing! \r\n\r\nSana: {DateTime.Now.ToString("dd-MM-yyyy, HH:mm:ss")}"
+                    );
 
+                    //System.IO.File.Delete(pdfFilePath);
+                }
+
+                //await Task.WhenAll(Tasks);
+                System.IO.File.Delete(pdfFilePath);
+
+                _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client:{update.Message.From.Username ?? update.Message.From.FirstName} Received");
                 //System.IO.File.Delete(pdfFilePath);
             }
+            else
+            {
+                await botClient.SendTextMessageAsync(
+                    chatId: update.Message.Chat.Id,
+                    text: "Failed to retrieve the timetable. Please try again later."
+                );
 
-            //await Task.WhenAll(Tasks);
-           System.IO.File.Delete(pdfFilePath);
-
-            _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client:{update.Message.From.Username ?? update.Message.From.FirstName} Received");
-            //System.IO.File.Delete(pdfFilePath);
+                _logger.LogError($"[DownloadTimetableAsPdfAsync] Client:" + $" {update.Message.From.Username ?? update.Message.From.FirstName} Error");
+            }
         }
-        else
+        catch(Exception ex)
         {
             await botClient.SendTextMessageAsync(
                 chatId: update.Message.Chat.Id,
-                text: "Failed to retrieve the timetable. Please try again later."
-            );
-
-            _logger.LogError($"[DownloadTimetableAsPdfAsync] Client:" + $" {update.Message.From.Username ?? update.Message.From.FirstName} Error");
+                text: $"Exception : {ex.Message}"
+                );
         }
-        CloseChromeInstances();
+        finally
+        {
+            CloseChromeInstances();
+        }
     }
 
 
