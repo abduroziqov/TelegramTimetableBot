@@ -210,7 +210,7 @@ public class TelegramBotService
                 System.IO.File.Delete(pdfFilePath);
                 _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client: {update.Message.From.Username ?? update.Message.From.FirstName} Received");
             }
-            /*else
+            else
             {
                 _logger.LogError("File not found after download attempt: " + pdfFilePath);
 
@@ -218,7 +218,7 @@ public class TelegramBotService
                     chatId: update.Message.Chat.Id,
                     text: "Failed to retrieve the timetable. Please try again later."
                 );
-            }*/
+            }
         }
         catch (Exception ex)
         {
