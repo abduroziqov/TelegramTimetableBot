@@ -125,7 +125,7 @@ public class TelegramBotService
                 {
                     var infoMessage = await botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
-                        text: "📌 Ushbu bot Raqamli Iqtisodiyot Fakulteti uchun maxsus yaratilgan!\r\n\r\n\U0001f9d1‍💻 Dasturchi: @abdurozikov_k\r\n\r\n📢 Kanal: @bek_sharpist"
+                        text: "📌 Ushbu bot Toshkent Davlat Iqtisodiyot talabalari uchun maxsus yaratilgan!\r\n\r\n\U0001f9d1‍💻 Dasturchi: @abdurozikov_k\r\n\r\n📢 Kanal: @bek_sharpist"
                     );
 
                     // Store and delete the message after action
