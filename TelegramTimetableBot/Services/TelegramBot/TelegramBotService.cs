@@ -115,7 +115,8 @@ public class TelegramBotService
                 {
                     var contactMessage = await botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
-                        text: "\U0001f9d1‍💻Shikoyatlar, dasturdagi xatoliklar va taklif uchun quyidagi manzillar orqali bog'lanishigiz mumkin:\r\n\r\n☎️ Telefon: +998-33-035-69-28\r\n\r\n✈️ Telegram: @abdurozikov_k"
+                        text: "\U0001f9d1‍💻Shikoyatlar, dasturdagi xatoliklar va taklif uchun quyidagi manzillar orqali bog'lanishingiz mumkin:\r\n\r\n☎️ Telefon: +998-33-035-69-28\r\n\r\n✈️ Telegram: @abdurozikov_k"
+
                     );
 
                     //await DeleteMessageAfterActionAsync(botClient, update.Message.Chat.Id, contactMessage.MessageId);
@@ -124,7 +125,7 @@ public class TelegramBotService
                 {
                     var infoMessage = await botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
-                        text: "📌 Ushbu bot Toshkent Davlat Iqtisodiyot Universiteti talabalari uchun maxsus yaratilgan!\r\n\r\n\U0001f9d1‍💻 Dasturchi: @abdurozikov_k"
+                        text: "📌 Ushbu bot Raqamli Iqtisodiyot Fakulteti uchun maxsus yaratilgan!\r\n\r\n\U0001f9d1‍💻 Dasturchi: @mister_xurshidbey\r\n\r\n📢 Kanal: @bek_sharpist"
                     );
 
                     // Store and delete the message after action
@@ -191,7 +192,7 @@ public class TelegramBotService
         {
             using (Stream stream = System.IO.File.Open(pdfFilePath, FileMode.Open))
             {
-                InputOnlineFile pdfFile = new InputOnlineFile(stream, $"{Guid.NewGuid().ToString()}.pdf");
+                InputOnlineFile pdfFile = new InputOnlineFile(stream, $"{Guid.NewGuid()}.pdf");
 
                 await botClient.SendDocumentAsync(
                     chatId: update.Message.Chat.Id,
@@ -199,12 +200,14 @@ public class TelegramBotService
                     caption: $"📌irb-61 guruhining dars jadvali\r\n\r\nBoshqa guruh dars jadvalini olish uchun qaytadan \r\n\"📅 Dars jadvali\" tugmasini bosing! \r\n\r\nSana: {DateTime.Now.ToString("dd-MM-yyyy, HH:mm:ss")}"
                 );
 
-                System.IO.File.Delete(pdfFilePath);
+                //System.IO.File.Delete(pdfFilePath);
             }
 
-            await Task.WhenAll(Tasks);
+            //await Task.WhenAll(Tasks);
+           System.IO.File.Delete(pdfFilePath);
 
             _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client:{update.Message.From.Username ?? update.Message.From.FirstName} Received");
+            //System.IO.File.Delete(pdfFilePath);
         }
         else
         {
