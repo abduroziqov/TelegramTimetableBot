@@ -104,12 +104,14 @@ public class TelegramBotService
 
                     var preparingMessage = await botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
-                        text: "Dars jadvali tayyorlanmoqda(biroz vaqt oladi). Iltimos, kuting..."
+                        //text: "Dars jadvali tayyorlanmoqda(biroz vaqt oladi). Iltimos, kuting..."
+                        text: "File yuklash bilan muammo bor. Yechim sifatida quyidagi linkni taqdim etmoqchiman... \r\n\r\n https://tsue.edupage.org/timetable/view.php?num=77&class=-1650 \r\n\r\n Link ustiga bosing"
                     );
 
                     // await DeleteMessageAfterActionAsync(botClient, update.Message.Chat.Id, preparingMessage.MessageId);
 
-                    await SendTimetablePdfAsync(botClient, update);
+
+                   // await SendTimetablePdfAsync(botClient, update);
                 }
                 else if (messageText == "📞 Aloqa")
                 {
@@ -125,7 +127,7 @@ public class TelegramBotService
                 {
                     var infoMessage = await botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
-                        text: "📌 Ushbu bot Toshkent Davlat Iqtisodiyot talabalari uchun maxsus yaratilgan!\r\n\r\n\U0001f9d1‍💻 Dasturchi: @abdurozikov_k\r\n\r\n📢 Kanal: @bek_sharpist"
+                        text: "📌 Ushbu bot Toshkent Davlat Iqtisodiyot Universiteti talabalari uchun maxsus yaratilgan!\r\n\r\n\U0001f9d1‍💻 Dasturchi: @abdurozikov_k\r\n\r\n📢 Kanal: @bek_sharpist"
                     );
 
                     // Store and delete the message after action
