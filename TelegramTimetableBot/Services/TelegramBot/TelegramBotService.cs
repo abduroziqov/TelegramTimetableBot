@@ -16,7 +16,7 @@ public class TelegramBotService
     private ReceiverOptions _receiverOptions;
     public readonly List<long> _userIds = new List<long>();
     //private string _url = "https://tsue.edupage.org/timetable/view.php?num=77&class=-1650";
-    private string _url = "https://tsue.edupage.org/timetable/";
+    private string _url = "https://stadion.uz/?ysclid=m26aws53gq159230424";
     private Task[] Tasks { get; set; } = new Task[10];
 
     private Dictionary<long, DateTime> _lastTimetableRequestTime = new Dictionary<long, DateTime>();
