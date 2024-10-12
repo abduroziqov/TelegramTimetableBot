@@ -188,10 +188,14 @@ public class TelegramBotService
         // Close Chrome instances after the timetable PDF is downloaded
         CloseChromeInstances();
 
+        _logger.LogInformation($"PDF should be downloaded to: {pdfFilePath}");
+
         try
         {
             if (System.IO.File.Exists(pdfFilePath))
             {
+                _logger.LogInformation("File found: " + pdfFilePath);
+
                 using (Stream stream = System.IO.File.Open(pdfFilePath, FileMode.Open))
                 {
                     InputOnlineFile pdfFile = new InputOnlineFile(stream, $"{Guid.NewGuid()}.pdf");
@@ -201,38 +205,36 @@ public class TelegramBotService
                         document: pdfFile,
                         caption: $"📌irb-61 guruhining dars jadvali\r\n\r\nBoshqa guruh dars jadvalini olish uchun qaytadan \r\n\"📅 Dars jadvali\" tugmasini bosing! \r\n\r\nSana: {DateTime.Now.ToString("dd-MM-yyyy, HH:mm:ss")}"
                     );
-
-                    //System.IO.File.Delete(pdfFilePath);
                 }
 
-                //await Task.WhenAll(Tasks);
                 System.IO.File.Delete(pdfFilePath);
-
-                _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client:{update.Message.From.Username ?? update.Message.From.FirstName} Received");
-                //System.IO.File.Delete(pdfFilePath);
+                _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client: {update.Message.From.Username ?? update.Message.From.FirstName} Received");
             }
             else
             {
+                _logger.LogError("File not found after download attempt: " + pdfFilePath);
+
                 await botClient.SendTextMessageAsync(
                     chatId: update.Message.Chat.Id,
                     text: "Failed to retrieve the timetable. Please try again later."
                 );
-
-                _logger.LogError($"[DownloadTimetableAsPdfAsync] Client:" + $" {update.Message.From.Username ?? update.Message.From.FirstName} Error");
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
+            _logger.LogError($"Exception: {ex.Message}");
+
             await botClient.SendTextMessageAsync(
                 chatId: update.Message.Chat.Id,
                 text: $"Exception : {ex.Message}"
-                );
+            );
         }
         finally
         {
             CloseChromeInstances();
         }
     }
+
 
 
     private void CloseChromeInstances()
