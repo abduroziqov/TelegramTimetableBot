@@ -15,8 +15,7 @@ public class TelegramBotService
     private readonly ILogger<TelegramBotService> _logger;
     private ReceiverOptions _receiverOptions;
     public readonly List<long> _userIds = new List<long>();
-    //private string _url = "https://tsue.edupage.org/timetable/view.php?num=77&class=-1650";
-    private string _url = "https://stadion.uz/?ysclid=m26aws53gq159230424";
+    private string _url = "https://tsue.edupage.org/timetable/view.php?num=77&class=-1650";
     private Task[] Tasks { get; set; } = new Task[10];
 
     private Dictionary<long, DateTime> _lastTimetableRequestTime = new Dictionary<long, DateTime>();
@@ -211,7 +210,7 @@ public class TelegramBotService
                 System.IO.File.Delete(pdfFilePath);
                 _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client: {update.Message.From.Username ?? update.Message.From.FirstName} Received");
             }
-            else
+            /*else
             {
                 _logger.LogError("File not found after download attempt: " + pdfFilePath);
 
@@ -219,7 +218,7 @@ public class TelegramBotService
                     chatId: update.Message.Chat.Id,
                     text: "Failed to retrieve the timetable. Please try again later."
                 );
-            }
+            }*/
         }
         catch (Exception ex)
         {
