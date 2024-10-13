@@ -102,16 +102,12 @@ public class TelegramBotService
 
                     _lastTimetableRequestTime[userId] = DateTime.UtcNow;
 
-                    var preparingMessage = await botClient.SendTextMessageAsync(
-                        chatId: update.Message.Chat.Id,
-                        //text: "Dars jadvali tayyorlanmoqda(biroz vaqt oladi). Iltimos, kuting..."
-                        text: "File yuklash bilan muammo bor. Yechim sifatida quyidagi linkni taqdim etmoqchiman... \r\n\r\n https://tsue.edupage.org/timetable/view.php?num=77&class=-1650 \r\n\r\n Link ustiga bosing"
-                    );
+                   
 
-                    // await DeleteMessageAfterActionAsync(botClient, update.Message.Chat.Id, preparingMessage.MessageId);
+                     //await DeleteMessageAfterActionAsync(botClient, update.Message.Chat.Id, preparingMessage.MessageId);
 
 
-                   // await SendTimetablePdfAsync(botClient, update);
+                   await SendTimetablePdfAsync(botClient, update);
                 }
                 else if (messageText == "📞 Aloqa")
                 {
@@ -216,10 +212,17 @@ public class TelegramBotService
             {
                 _logger.LogError("File not found after download attempt: " + pdfFilePath);
 
-                await botClient.SendTextMessageAsync(
-                    chatId: update.Message.Chat.Id,
-                    text: "Failed to retrieve the timetable. Please try again later."
-                );
+                var preparingMessage = await botClient.SendTextMessageAsync(
+                       chatId: update.Message.Chat.Id,
+                       //text: "Dars jadvali tayyorlanmoqda(biroz vaqt oladi). Iltimos, kuting..."
+                       //text: "File yuklash bilan muammo bor. Yechim sifatida quyidagi linkni taqdim etmoqchiman... \r\n\r\n https://tsue.edupage.org/timetable/view.php?num=77&class=-1650 \r\n\r\n Link ustiga bosing"
+                       text: $"📅 Dars jadvalini ko'rish uchun bosing: [Dars jadvali](https://tsue.edupage.org/timetable/view.php?num=77&class=-1650)",
+                       parseMode: ParseMode.Markdown);
+
+                /* await botClient.SendTextMessageAsync(
+                     chatId: update.Message.Chat.Id,
+                     text: "Failed to retrieve the timetable. Please try again later."
+                 );*/
             }
         }
         catch (Exception ex)
