@@ -212,17 +212,26 @@ public class TelegramBotService
             {
                 _logger.LogError("File not found after download attempt: " + pdfFilePath);
 
+
+                // Step 1: Notify the user that the timetable is being prepared
+                var waitingMessage = await botClient.SendTextMessageAsync(
+                       chatId: update.Message.Chat.Id,
+                       text: "Dars jadval tayyorlanmoqda(biroz vaqt oladi). Iltimos, kuting..."
+                    );
+
+                // Step 2: Send the clickable line once the user is notified
                 var preparingMessage = await botClient.SendTextMessageAsync(
                        chatId: update.Message.Chat.Id,
-                       //text: "Dars jadvali tayyorlanmoqda(biroz vaqt oladi). Iltimos, kuting..."
-                       //text: "File yuklash bilan muammo bor. Yechim sifatida quyidagi linkni taqdim etmoqchiman... \r\n\r\n https://tsue.edupage.org/timetable/view.php?num=77&class=-1650 \r\n\r\n Link ustiga bosing"
                        text: $"📅 Dars jadvalini ko'rish uchun bosing: [Dars jadvali](https://tsue.edupage.org/timetable/view.php?num=77&class=-1650)",
                        parseMode: ParseMode.Markdown);
 
-                /* await botClient.SendTextMessageAsync(
-                     chatId: update.Message.Chat.Id,
-                     text: "Failed to retrieve the timetable. Please try again later."
-                 );*/
+                // Step 3: Pin the clickable link message
+                await botClient.PinChatMessageAsync(
+                    chatId: update.Message.Chat.Id,
+                    messageId: preparingMessage.MessageId,
+                    disableNotification: true
+                    );
+
             }
         }
         catch (Exception ex)
