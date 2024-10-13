@@ -1,4 +1,4 @@
-﻿namespace TelegramTimetableBot.Service.Services.TelegramBot;
+﻿namespace TelegramTimetableBot.Services.TelegramBot;
 
 public class TelegramBotOptions
 {

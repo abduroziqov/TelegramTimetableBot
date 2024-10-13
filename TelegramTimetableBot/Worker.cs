@@ -1,6 +1,6 @@
-using TelegramTimetableBot.Service.Services.TelegramBot;
+using TelegramTimetableBot.Services.TelegramBot;
 
-namespace TelegramTimetableBot.Service
+namespace TelegramTimetableBot
 {
     public class Worker : BackgroundService
     {

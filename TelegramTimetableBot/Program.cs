@@ -1,5 +1,5 @@
-using TelegramTimetableBot.Service;
-using TelegramTimetableBot.Service.Services.TelegramBot;
+using TelegramTimetableBot;
+using TelegramTimetableBot.Services.TelegramBot;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.Configure<TelegramBotOptions>(builder.Configuration.GetSection(TelegramBotOptions.Secrets));
