@@ -42,6 +42,7 @@ public class TelegramBotService
             Headless = true
         });
     }
+    public async Task<User> GetMeAsync() => await _telegramBotClient.GetMeAsync();
     public async Task DeleteWebhookAsync() => await _telegramBotClient.DeleteWebhookAsync();
     public void StartReceiving(CancellationToken cancellationToken) => _telegramBotClient.StartReceiving(HandleUpdateAsync, HandleErrorAsync, _receiverOptions, cancellationToken);
     public async Task<int> GetUserCountAsync() => await Task.FromResult(_userIds.Count);
