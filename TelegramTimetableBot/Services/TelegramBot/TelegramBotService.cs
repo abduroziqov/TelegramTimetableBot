@@ -71,9 +71,6 @@ public class TelegramBotService
                     text: welcomeMessage,
                     replyMarkup: replyKeyboardMarkup
                 );
-
-                // Store and delete the message after the action
-                //await DeleteMessageAfterActionAsync(botClient, update.Message.Chat.Id, sentMessage.MessageId);
             }
             else if (update.Type == UpdateType.Message)
             {
@@ -94,18 +91,11 @@ public class TelegramBotService
                                 chatId: update.Message.Chat.Id,
                                 text: $"Siz dars jadvalini yaqinda oldingiz. Iltimos, {minutesRemaining} daqiqa {secondsRemaining} soniyadan keyin qayta urinib ko'ring."
                             );
-
-                            //await DeleteMessageAfterActionAsync(botClient, update.Message.Chat.Id, waitMessage.MessageId);
                             return;
                         }
                     }
 
                     _lastTimetableRequestTime[userId] = DateTime.UtcNow;
-
-                   
-
-                     //await DeleteMessageAfterActionAsync(botClient, update.Message.Chat.Id, preparingMessage.MessageId);
-
 
                    await SendTimetablePdfAsync(botClient, update);
                 }
@@ -184,7 +174,7 @@ public class TelegramBotService
         string pdfFilePath = await DownloadTimetableAsPdfAsync(_url);
 
         // Close Chrome instances after the timetable PDF is downloaded
-        CloseChromeInstances();
+        //CloseChromeInstances();
 
         _logger.LogInformation($"PDF should be downloaded to: {pdfFilePath}");
 
@@ -212,7 +202,6 @@ public class TelegramBotService
             {
                 _logger.LogError("File not found after download attempt: " + pdfFilePath);
 
-
                 // Step 1: Notify the user that the timetable is being prepared
                 var waitingMessage = await botClient.SendTextMessageAsync(
                        chatId: update.Message.Chat.Id,
@@ -231,7 +220,6 @@ public class TelegramBotService
                     messageId: preparingMessage.MessageId,
                     disableNotification: true
                     );
-
             }
         }
         catch (Exception ex)
@@ -242,10 +230,6 @@ public class TelegramBotService
                 chatId: update.Message.Chat.Id,
                 text: $"Exception : {ex.Message}"
             );
-        }
-        finally
-        {
-            CloseChromeInstances();
         }
     }
 
