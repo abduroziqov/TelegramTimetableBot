@@ -16,23 +16,19 @@ public class TelegramBotService
 
     private readonly Dictionary<long, DateTime> _lastTimetableRequestTime = new();
     private Task[] Tasks { get; set; } = [];
-    private readonly DownloaderService _downloaderService;
     
-    public TelegramBotService(IConfiguration configuration, ILogger<TelegramBotService> logger, DownloaderService downloaderService)
+    public TelegramBotService(IConfiguration configuration, ILogger<TelegramBotService> logger)
     {
         _telegramBotClient = new TelegramBotClient(configuration["Secrets:BotToken"]!);
         _receiverOptions = new ReceiverOptions { AllowedUpdates = Array.Empty<UpdateType>() };
         _logger = logger;
-        _downloaderService = downloaderService;
-
-        _downloaderService.Pause += Pause;
-        _downloaderService.Resume += Resume;
     }
 
 
     public async Task<User> GetMeAsync() => await _telegramBotClient.GetMeAsync();
     public async Task DeleteWebhookAsync() => await _telegramBotClient.DeleteWebhookAsync();
     public void StartReceiving(CancellationToken cancellationToken) => _telegramBotClient.StartReceiving(HandleUpdateAsync, HandleErrorAsync, _receiverOptions, cancellationToken);
+    public void StopReceiving() => _telegramBotClient.CloseAsync();
     public async Task<int> GetUserCountAsync() => await Task.FromResult(_userIds.Count);
 
     private Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -130,15 +126,5 @@ public class TelegramBotService
         _logger.LogError(exception.Message);
 
         await Task.CompletedTask;
-    }
-
-    private async void Pause(object? sender, EventArgs e)
-    {
-        await _telegramBotClient.CloseAsync();
-    }
-
-    private async void Resume(object? sender, EventArgs e)
-    {
-        await _telegramBotClient.CloseAsync();
     }
 }
