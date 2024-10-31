@@ -9,18 +9,15 @@ namespace TelegramTimetableBot.Services.TelegramBot;
 
 public class TelegramBotService
 {
-    private ITelegramBotClient _telegramBotClient;
+    private readonly ITelegramBotClient _telegramBotClient;
     private readonly ILogger<TelegramBotService> _logger;
-    private ReceiverOptions _receiverOptions;
-    public readonly List<long> _userIds = new List<long>();
+    private readonly ReceiverOptions _receiverOptions;
+    private readonly List<long> _userIds = new();
 
-    private string _url = "https://tsue.edupage.org/timetable/view.php?num=77&class=-1650";
-
-    private Dictionary<long, DateTime> _lastTimetableRequestTime = new Dictionary<long, DateTime>();
-    private Task[] Tasks { get; set; } = Array.Empty<Task>();
-    private DownloaderService _downloaderService;
-
-
+    private readonly Dictionary<long, DateTime> _lastTimetableRequestTime = new();
+    private Task[] Tasks { get; set; } = [];
+    private readonly DownloaderService _downloaderService;
+    
     public TelegramBotService(IConfiguration configuration, ILogger<TelegramBotService> logger, DownloaderService downloaderService)
     {
         _telegramBotClient = new TelegramBotClient(configuration["Secrets:BotToken"]!);
@@ -38,17 +35,20 @@ public class TelegramBotService
     public void StartReceiving(CancellationToken cancellationToken) => _telegramBotClient.StartReceiving(HandleUpdateAsync, HandleErrorAsync, _receiverOptions, cancellationToken);
     public async Task<int> GetUserCountAsync() => await Task.FromResult(_userIds.Count);
 
-    private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    private Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
         try
         {
-            if (update.Type == UpdateType.Message && update.Message.Text == "/start")
+            if (update is { Type: UpdateType.Message, Message.Text: "/start" })
             {
-                long userId = update.Message.From.Id;
-
-                if (!_userIds.Contains(userId))
+                if (update.Message.From != null)
                 {
-                    _userIds.Add(userId);
+                    long userId = update.Message.From.Id;
+
+                    if (!_userIds.Contains(userId))
+                    {
+                        _userIds.Add(userId);
+                    }
                 }
 
                 string username = update.Message.From.FirstName;
@@ -86,7 +86,7 @@ public class TelegramBotService
                             Tasks.Append(botClient.SendTextMessageAsync(
                                 chatId: update.Message.Chat.Id,
                                 text: $"Siz dars jadvalini yaqinda oldingiz. Iltimos, {minutesRemaining} daqiqa {secondsRemaining} soniyadan keyin qayta urinib ko'ring."));
-                            return;
+                            return Task.CompletedTask;
                         }
                     }
 
@@ -121,6 +121,8 @@ public class TelegramBotService
 
             _logger.LogError($"[HandleUpdateAsync] (@{update.Message.From.Username ?? update.Message.From.FirstName}) {ex.Message}");
         }
+
+        return Task.CompletedTask;
     }
 
     private async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
@@ -130,15 +132,13 @@ public class TelegramBotService
         await Task.CompletedTask;
     }
 
-    private void Pause(object sender, EventArgs e)
+    private async void Pause(object? sender, EventArgs e)
     {
-
-        // message from user => here
+        await _telegramBotClient.CloseAsync();
     }
 
-    private void Resume(object sender, EventArgs e)
+    private async void Resume(object? sender, EventArgs e)
     {
-        // pause restart
-        // answer for messages 
+        await _telegramBotClient.CloseAsync();
     }
 }
