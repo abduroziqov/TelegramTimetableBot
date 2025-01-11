@@ -64,14 +64,26 @@ public class TelegramBotService
                 string username = update.Message.From.FirstName;
                 string welcomeMessage = $"Assalomu alaykum {username}.\n\nSizga yordam bera olishim uchun pastdagi buyruqlardan birini tanlang 👇";
 
-                var replyKeyboardMarkup = new ReplyKeyboardMarkup([
-                    [new KeyboardButton("📅 Dars jadvali")],
-                    [new KeyboardButton("📞 Aloqa")],
-                    [new KeyboardButton("📄 Ma'lumot")],
-                    [new KeyboardButton("📊 Statistika")]])
+                /* var replyKeyboardMarkup = new ReplyKeyboardMarkup([
+                     [new KeyboardButton("📅 Dars jadvali")],
+                     [new KeyboardButton("📞 Aloqa")],
+                     [new KeyboardButton("📄 Ma'lumot")],
+                     [new KeyboardButton("📊 Statistika")]])
+                 {
+                     ResizeKeyboard = true
+                 };*/
+
+                var replyKeyboardMarkup = new ReplyKeyboardMarkup(new[]
+{
+    new[] { new KeyboardButton("📅 Dars jadvali") },
+    new[] { new KeyboardButton("📞 Aloqa") },
+    new[] { new KeyboardButton("📄 Ma'lumot") },
+    new[] { new KeyboardButton("📊 Statistika") }
+})
                 {
                     ResizeKeyboard = true
                 };
+
 
                 Tasks.Append(botClient.SendTextMessageAsync(
                     chatId: update.Message.Chat.Id,
@@ -163,7 +175,12 @@ public class TelegramBotService
                 // Step 1: check the access to read file and save it to buffer with [guid].pdf
                 using (Stream stream = System.IO.File.Open(pdfFilePath, FileMode.Open))
                 {
-                    InputOnlineFile pdfFile = new InputOnlineFile(stream, $"{pdfFilePath.Split(['/', '\\']).Last()}");
+                    /*InputOnlineFile pdfFile = new InputOnlineFile(stream, $"{pdfFilePath.Split(['/', '\\']).Last()}");*/
+                    InputOnlineFile pdfFile = new InputOnlineFile(
+    stream,
+    $"{pdfFilePath.Split(new[] { '/', '\\' }).Last()}"
+);
+
 
                     // Step 2: send this file to the client
                     await botClient.SendDocumentAsync(
