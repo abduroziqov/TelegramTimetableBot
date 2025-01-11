@@ -14,7 +14,8 @@ public class TelegramBotService
     private readonly ILogger<TelegramBotService> _logger;
     private          ReceiverOptions             _receiverOptions;
     public readonly  List<long>                  _userIds = new List<long>();
-    private string                               _url = "https://tsue.edupage.org/timetable/view.php?num=77&class=-1650";
+    //private string                               _url = "https://tsue.edupage.org/timetable/view.php?num=77&class=-1650";
+    private string                               _url = "https://tsue.edupage.org/timetable/view.php?num=80&class=-1650";
     private Dictionary<long, DateTime>           _lastTimetableRequestTime = new Dictionary<long, DateTime>();
 
     private Task[] Tasks { get; set; } = Array.Empty<Task>();
@@ -131,21 +132,6 @@ public class TelegramBotService
                 text: "Too many requests. Please try later."));
 
             _logger.LogError($"[HandleUpdateAsync] (@{update.Message.From.Username ?? update.Message.From.FirstName}) {ex.Message}");
-        }
-    }
-
-    private async Task DeleteMessageAfterActionAsync(ITelegramBotClient botClient, long chatId, int messageId)
-    {
-        // Wait for a few seconds before deleting the message
-        await Task.Delay(10000); // 10 seconds delay
-
-        try
-        {
-            await botClient.DeleteMessageAsync(chatId, messageId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Error deleting message {messageId}: {ex.Message}");
         }
     }
 
