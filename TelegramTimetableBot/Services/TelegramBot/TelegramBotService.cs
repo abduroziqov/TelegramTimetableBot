@@ -39,7 +39,11 @@ public class TelegramBotService
 
         Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
-            ExecutablePath = OperatingSystem.IsWindows() ? @"C:\Program Files\Google\Chrome\Application\chrome.exe" : @"/usr/bin/google-chrome",
+            //ExecutablePath = OperatingSystem.IsWindows() ? @"C:\Program Files\Google\Chrome\Application\chrome.exe" : @"/usr/bin/google-chrome",
+            ExecutablePath = OperatingSystem.IsWindows()
+    ? @"C:\Program Files\Google\Chrome\Application\chrome.exe"
+    : @"/usr/bin/google-chrome",
+
             Headless = true
         });
     }
