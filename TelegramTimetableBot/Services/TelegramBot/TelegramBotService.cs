@@ -42,7 +42,7 @@ public class TelegramBotService
             //ExecutablePath = OperatingSystem.IsWindows() ? @"C:\Program Files\Google\Chrome\Application\chrome.exe" : @"/usr/bin/google-chrome",
             ExecutablePath = OperatingSystem.IsWindows()
     ? @"C:\Program Files\Google\Chrome\Application\chrome.exe"
-    : @"/usr/bin/google-chrome",
+    : @"/usr/bin/chromium-browser",
 
             Headless = true
         });
