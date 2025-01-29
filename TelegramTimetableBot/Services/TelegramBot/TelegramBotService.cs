@@ -1,10 +1,11 @@
-﻿using Telegram.Bot;
-using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
-using Telegram.Bot.Types;
+﻿using Microsoft.Playwright;
+using Telegram.Bot;
 using Telegram.Bot.Polling;
-using Microsoft.Playwright;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
+using Telegram.Bot.Types.ReplyMarkups;
+using TelegramTimetableBot.Methods;
 
 namespace TelegramTimetableBot.Services.TelegramBot;
 
@@ -14,8 +15,7 @@ public class TelegramBotService
     private readonly ILogger<TelegramBotService> _logger;
     private          ReceiverOptions             _receiverOptions;
     public readonly  List<long>                  _userIds = new List<long>();
-    //private string                               _url = "https://tsue.edupage.org/timetable/view.php?num=77&class=-1650";
-    private string                               _url = "https://tsue.edupage.org/timetable/view.php?num=80&class=-1650";
+    private string                               _url = "https://tsue.edupage.org/timetable/view.php?num=81&class=-1650";
     private Dictionary<long, DateTime>           _lastTimetableRequestTime = new Dictionary<long, DateTime>();
 
     private Task[] Tasks { get; set; } = Array.Empty<Task>();
@@ -64,26 +64,9 @@ public class TelegramBotService
                 string username = update.Message.From.FirstName;
                 string welcomeMessage = $"Assalomu alaykum {username}.\n\nSizga yordam bera olishim uchun pastdagi buyruqlardan birini tanlang 👇";
 
-                /* var replyKeyboardMarkup = new ReplyKeyboardMarkup([
-                     [new KeyboardButton("📅 Dars jadvali")],
-                     [new KeyboardButton("📞 Aloqa")],
-                     [new KeyboardButton("📄 Ma'lumot")],
-                     [new KeyboardButton("📊 Statistika")]])
-                 {
-                     ResizeKeyboard = true
-                 };*/
+                ReplyKeyboardMarkup replyKeyboardMarkup = TelegramKeyboards.GetMainMenuKeyboard();
 
-                var replyKeyboardMarkup = new ReplyKeyboardMarkup(new[]
-{
-    new[] { new KeyboardButton("📅 Dars jadvali") },
-    new[] { new KeyboardButton("📞 Aloqa") },
-    new[] { new KeyboardButton("📄 Ma'lumot") },
-    new[] { new KeyboardButton("📊 Statistika") }
-})
-                {
-                    ResizeKeyboard = true
-                };
-
+                
 
                 Tasks.Append(botClient.SendTextMessageAsync(
                     chatId: update.Message.Chat.Id,
@@ -95,9 +78,21 @@ public class TelegramBotService
                 var messageText = update.Message.Text;
                 long userId = update.Message.From.Id;
 
-                if (messageText == "📅 Dars jadvali")
+                if (messageText == "🔙 Orqaga")
                 {
-                    if (_lastTimetableRequestTime.TryGetValue(userId, out DateTime lastRequestTime))
+                    // Call the GetMainMenuKeyboard method from the class
+                    var replyKeyboardMarkup = TelegramKeyboards.GetMainMenuKeyboard();
+
+                    await botClient.SendTextMessageAsync(
+                        chatId: update.Message.Chat.Id,
+                        text: "Please select an option:",
+                        replyMarkup: replyKeyboardMarkup
+                    );
+                }
+
+                else if (messageText == "📅 Dars jadvali")
+                {
+                    /*if (_lastTimetableRequestTime.TryGetValue(userId, out DateTime lastRequestTime))
                     {
                         TimeSpan timeSinceLastRequest = DateTime.UtcNow - lastRequestTime;
                         if (timeSinceLastRequest.TotalHours < 1)
@@ -110,30 +105,69 @@ public class TelegramBotService
                                 text: $"Siz dars jadvalini yaqinda oldingiz. Iltimos, {minutesRemaining} daqiqa {secondsRemaining} soniyadan keyin qayta urinib ko'ring."));
                             return;
                         }
-                    }
+                    }*/
 
+                    // Update the last time request time
                     _lastTimetableRequestTime[userId] = DateTime.UtcNow;
 
-                    Tasks.Append(SendTimetablePdfAsync(botClient, update));
-                }
-                else if (messageText == "📞 Aloqa")
-                {
+                    // Create a new keyboard with the addintional buttons
+                    var replyKeyboardMarkupForIRB = new ReplyKeyboardMarkup(new[]
+                    {
+                        new[] { new KeyboardButton("IRB-61")},
+                        new[] { new KeyboardButton("IRB-62")},
+                        new[] { new KeyboardButton("🔙 Orqaga") }
+                    })
+                    {
+                        ResizeKeyboard = true
+                    };
+
                     Tasks.Append(botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
-                        text: "\U0001f9d1‍💻Shikoyatlar, dasturdagi xatoliklar va taklif uchun quyidagi manzillar orqali bog'lanishingiz mumkin:\r\n\r\n☎️ Telefon: +998-33-035-69-28\r\n\r\n✈️ Telegram: @abdurozikov_k"));
+                        text: "Iltimos, quyidagi tugmalardan birini tanlang:",
+                        replyMarkup: replyKeyboardMarkupForIRB
+                        ));
 
+                    //Tasks.Append(SendTimetablePdfAsync(botClient, update));
                 }
+                /* else if(messageText == "IRB-61")
+                 {
+                     // Send the timetable PDF for IRB-61
+                     await SendCountdown.SendCountdownAnimationAsync(botClient, update.Message.Chat.Id, "IRB-61 uchun dars jadvali tayyorlanmoqda.");
+                     *//*_url = "https://tsue.edupage.org/timetable/view.php?num=81&class=-1650";  // Link for IRB-61
+                     Tasks.Append(SendTimetablePdfAsync(botClient, update));*//*
+                     await SendTimetablePdfAsync(botClient, update, "IRB-61");  // Pass "IRB-61"
+                 }
+                 else if (messageText == "IRB-62")
+                 {
+                     // Send message for IRB-62 
+                     await SendCountdown.SendCountdownAnimationAsync(botClient, update.Message.Chat.Id, "IRB-62 uchun dars jadvali tayyorlanmoqda.");
+                     await SendTimetablePdfAsync(botClient, update, "IRB-62");  // Pass "IRB-62"
+                 }*/
+                else if (messageText == "IRB-61")
+                {
+                    _url = "https://tsue.edupage.org/timetable/view.php?num=81&class=-1650";  // URL for IRB-61
+                    await SendCountdown.SendCountdownAnimationAsync(botClient, update.Message.Chat.Id, "IRB-61 uchun dars jadvali tayyorlanmoqda.");
+                    await SendTimetablePdfAsync(botClient, update, "IRB-61");
+                }
+                else if (messageText == "IRB-62")
+                {
+                    _url = "https://tsue.edupage.org/timetable/view.php?num=81&class=-1651";  // URL for IRB-62
+                    await SendCountdown.SendCountdownAnimationAsync(botClient, update.Message.Chat.Id, "IRB-62 uchun dars jadvali tayyorlanmoqda.");
+                    await SendTimetablePdfAsync(botClient, update, "IRB-62");
+                }
+
                 else if (messageText == "📄 Ma'lumot")
                 {
                     Tasks.Append(botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
                         text: "📌 Ushbu bot Toshkent Davlat Iqtisodiyot Universiteti talabalari uchun maxsus yaratilgan!\r\n\r\n\U0001f9d1‍💻 Dasturchi: @abdurozikov_k\r\n\r\n📢 Kanal: @bek_sharpist"));
                 }
-                else if (messageText == "📊 Statistika")
+                else
                 {
-                    Tasks.Append(botClient.SendTextMessageAsync(
+                    await botClient.SendTextMessageAsync(
                         chatId: update.Message.Chat.Id,
-                        text: "Ushbu bo'lim ishlab chiqilmoqda"));
+                        text: "Men bu buyruqni tushunmadim. Iltimos, variantni tanlang."
+                    );
                 }
             }
         }
@@ -160,79 +194,73 @@ public class TelegramBotService
     /// <param name="botClient"></param>
     /// <param name="update"></param>
     /// <returns></returns>
-    private async Task SendTimetablePdfAsync(ITelegramBotClient botClient, Update update)
+  
+    private async Task SendTimetablePdfAsync(ITelegramBotClient botClient, Update update, string groupName)
     {
-        string pdfFilePath = await DownloadTimetableAsPdfAsync(_url);
+        // Step 1: Download the PDF as a byte array
+        byte[] pdfBytes = await DownloadTimetableAsPdfAsync(_url);
 
-        _logger.LogInformation($"PDF should be downloaded to: {pdfFilePath}");
+        if (pdfBytes == null || pdfBytes.Length == 0)
+        {
+            _logger.LogError("Failed to generate the PDF.");
+
+            // Notify the user if PDF generation fails
+            await botClient.SendTextMessageAsync(
+                chatId: update.Message.Chat.Id,
+                text: $"❌ PDF-ni yuklashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
+            );
+            return;
+        }
+
+        _logger.LogInformation("PDF successfully generated in memory.");
 
         try
         {
-            if (System.IO.File.Exists(pdfFilePath))
+            // Step 2: Send the PDF to the user
+            using (var stream = new MemoryStream(pdfBytes))
             {
-                _logger.LogInformation("File found: " + pdfFilePath);
+                var pdfFile = new InputOnlineFile(stream, "DarsJadvali.pdf");
 
-                // Step 1: check the access to read file and save it to buffer with [guid].pdf
-                using (Stream stream = System.IO.File.Open(pdfFilePath, FileMode.Open))
-                {
-                    /*InputOnlineFile pdfFile = new InputOnlineFile(stream, $"{pdfFilePath.Split(['/', '\\']).Last()}");*/
-                    InputOnlineFile pdfFile = new InputOnlineFile(
-    stream,
-    $"{pdfFilePath.Split(new[] { '/', '\\' }).Last()}"
-);
+                string caption = groupName == "IRB-61"
+                ? $"📌 IRB-61 guruhining dars jadvali\r\n\r\nBoshqa guruh dars jadvalini olish uchun qaytadan\r\n\"📅 Dars jadvali\" tugmasini bosing!\r\n\r\nSana: {DateTime.Now:dd-MM-yyyy, HH:mm:ss}"
+                : $"📌 IRB-62 guruhining dars jadvali\r\n\r\nBoshqa guruh dars jadvalini olish uchun qaytadan\r\n\"📅 Dars jadvali\" tugmasini bosing!\r\n\r\nSana: {DateTime.Now:dd-MM-yyyy, HH:mm:ss}";
 
 
-                    // Step 2: send this file to the client
-                    await botClient.SendDocumentAsync(
-                        chatId: update.Message.Chat.Id,
-                        document: pdfFile,
-                        caption: $"📌irb-61 guruhining dars jadvali\r\n\r\nBoshqa guruh dars jadvalini olish uchun qaytadan \r\n\"📅 Dars jadvali\" tugmasini bosing! \r\n\r\nSana: {DateTime.Now.ToString("dd-MM-yyyy, HH:mm:ss")}");
-                }
-
-                // Step 3: drop this file
-                System.IO.File.Delete(pdfFilePath);
-
-                _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client: {update.Message.From.Username ?? update.Message.From.FirstName} Received");
-            }
-            else
-            {
-                _logger.LogError("File not found after download attempt: " + pdfFilePath);
-
-                // Step 1: Send the clickable line once the user is notified
-                var preparingMessage = await botClient.SendTextMessageAsync(
+                await botClient.SendDocumentAsync(
                     chatId: update.Message.Chat.Id,
-                    text: $"📅 Dars jadvalini ko'rish uchun bosing: [Dars jadvali](https://tsue.edupage.org/timetable/view.php?num=77&class=-1650)",
-                    parseMode: ParseMode.Markdown);
-
-                // Step 2: Pin the clickable link message
-                await botClient.PinChatMessageAsync(
-                    chatId: update.Message.Chat.Id,
-                    messageId: preparingMessage.MessageId,
-                    disableNotification: true);
+                    document: pdfFile,
+                    caption: caption
+                );
             }
+
+            _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client: {update.Message.From.Username ?? update.Message.From.FirstName} received the timetable.");
         }
         catch (Exception ex)
         {
             _logger.LogError($"Exception: {ex.Message}");
 
+            // Notify the user of the exception
             await botClient.SendTextMessageAsync(
                 chatId: update.Message.Chat.Id,
-                text: $"Exception : {ex.Message}");
+                text: $"❌ Xatolik: {ex.Message}"
+            );
         }
     }
+
 
     /// <summary>
     /// Returns timetable from specific url
     /// </summary>
     /// <param name="url"></param>
     /// <returns></returns>
-    private async Task<string> DownloadTimetableAsPdfAsync(string url)
+    private async Task<byte[]> DownloadTimetableAsPdfAsync(string url)
     {
+
         try
         {
             var page = await Browser.NewPageAsync();
 
-            await page.GotoAsync(_url);
+            await page.GotoAsync(url);
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             await page.ClickAsync("text='OK'");
             await page.WaitForTimeoutAsync(1000);
@@ -240,11 +268,9 @@ public class TelegramBotService
             await page.EvaluateAsync("document.getElementById('fitheight').childNodes[0].remove();");
             await page.WaitForTimeoutAsync(1000);
 
-            string pdfFilePath = $"{Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".pdf")}";
-
-            await page.PdfAsync(new PagePdfOptions
+            // Generate the PDF as a byte array
+            var pdfBytes = await page.PdfAsync(new PagePdfOptions
             {
-                Path = pdfFilePath,
                 Landscape = true,
                 PreferCSSPageSize = true,
                 Format = "A4",
@@ -252,15 +278,28 @@ public class TelegramBotService
                 PageRanges = "2",
             });
 
-            await Browser.CloseAsync();
-
-            return pdfFilePath;
+            return pdfBytes;
         }
         catch (Exception e)
         {
             _logger.LogError(e.Message, e.InnerException, e.StackTrace);
 
-            return string.Empty;
+            return null;
+        }
+    }
+
+    public static class TelegramKeyboards
+    {
+        public static ReplyKeyboardMarkup GetMainMenuKeyboard()
+        {
+            return new ReplyKeyboardMarkup(new[]
+            {
+            new[] { new KeyboardButton("📅 Dars jadvali") },
+            new[] { new KeyboardButton("📄 Ma'lumot") }
+        })
+            {
+                ResizeKeyboard = true
+            };
         }
     }
 }
