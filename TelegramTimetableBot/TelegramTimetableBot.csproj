@@ -4,10 +4,6 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>dotnet-TelegramTimetableBot.Service-bc241caf-b218-43c8-ad68-74a2de00012a</UserSecretsId>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileContext>.</DockerfileContext>
-    <LangVersion>14</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
