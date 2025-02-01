@@ -19,6 +19,6 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Publish
-      run: dotnet publish -c Release -o /var/www/TelegramTimetableBot
+      run: echo "P@ssword1" | sudo -S dotnet publish -c Release -o /var/www/TelegramTimetableBot
     - name: Start service
       run: echo "P@ssword1" | sudo -S systemctl start telegram-bot.service
