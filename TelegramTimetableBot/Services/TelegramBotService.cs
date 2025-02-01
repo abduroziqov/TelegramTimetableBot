@@ -1,31 +1,31 @@
-﻿using Microsoft.Playwright;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InputFiles;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramTimetableBot.Methods;
 
-namespace TelegramTimetableBot.Services.TelegramBot;
+namespace TelegramTimetableBot.Services;
 
 public class TelegramBotService
 {
     private          ITelegramBotClient          _telegramBotClient;
     private readonly ILogger<TelegramBotService> _logger;
-    private          ReceiverOptions             _receiverOptions;
-    public readonly  List<long>                  _userIds = new List<long>();
+    private readonly BrowserService              _browserService;
+    
+    private readonly ReceiverOptions             _receiverOptions;
+    private readonly List<long>                  _userIds = new();
     private string                               _url = "https://tsue.edupage.org/timetable/view.php?num=81&class=-1650";
-    private Dictionary<long, DateTime>           _lastTimetableRequestTime = new Dictionary<long, DateTime>();
+    private readonly Dictionary<long, DateTime>  _lastTimetableRequestTime = new();
 
-    private Task[] Tasks { get; set; } = Array.Empty<Task>();
-    private IBrowser Browser { get; set; }
+    private Task[] Tasks { get; set; } = [];
 
-    public TelegramBotService(IConfiguration configuration, ILogger<TelegramBotService> logger)
+    public TelegramBotService(IConfiguration configuration, ILogger<TelegramBotService> logger, BrowserService browserService)
     {
-        _telegramBotClient = new TelegramBotClient(configuration["Secrets:BotToken"]!);
-        _receiverOptions   = new ReceiverOptions { AllowedUpdates = Array.Empty<UpdateType>() };
+        _telegramBotClient = new TelegramBotClient(configuration["BotToken"]!);
+        _receiverOptions   = new ReceiverOptions { AllowedUpdates = [] };
         _logger            = logger;
+        _browserService    = browserService;
 
         InitializeBrowser();
     }
@@ -35,20 +35,10 @@ public class TelegramBotService
     /// </summary>
     private async void InitializeBrowser()
     {
-        var playwright = await Playwright.CreateAsync();
-
-        Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
-        {
-            //ExecutablePath = OperatingSystem.IsWindows() ? @"C:\Program Files\Google\Chrome\Application\chrome.exe" : @"/usr/bin/google-chrome",
-            ExecutablePath = OperatingSystem.IsWindows()
-    ? @"C:\Program Files\Google\Chrome\Application\chrome.exe"
-    : @"/usr/bin/chromium-browser",
-
-            Headless = true
-        });
+        
     }
-    public async Task<User> GetMeAsync() => await _telegramBotClient.GetMeAsync();
-    public async Task DeleteWebhookAsync() => await _telegramBotClient.DeleteWebhookAsync();
+    public async Task<User> GetMe() => await _telegramBotClient.GetMe();
+    public async Task DeleteWebhook() => await _telegramBotClient.DeleteWebhook();
     public void StartReceiving(CancellationToken cancellationToken) => _telegramBotClient.StartReceiving(HandleUpdateAsync, HandleErrorAsync, _receiverOptions, cancellationToken);
     public async Task<int> GetUserCountAsync() => await Task.FromResult(_userIds.Count);
 
@@ -202,14 +192,14 @@ public class TelegramBotService
     private async Task SendTimetablePdfAsync(ITelegramBotClient botClient, Update update, string groupName)
     {
         // Step 1: Download the PDF as a byte array
-        byte[] pdfBytes = await DownloadTimetableAsPdfAsync(_url);
+        byte[] pdfBytes = await _browserService.DownloadTimetableAsPdfAsync(_url);
 
-        if (pdfBytes == null || pdfBytes.Length == 0)
+        if (pdfBytes.Length == 0)
         {
             _logger.LogError("Failed to generate the PDF.");
 
             // Notify the user if PDF generation fails
-            await botClient.SendTextMessageAsync(
+            await botClient.SendMessage(
                 chatId: update.Message.Chat.Id,
                 text: $"❌ PDF-ni yuklashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
             );
@@ -223,16 +213,16 @@ public class TelegramBotService
             // Step 2: Send the PDF to the user
             using (var stream = new MemoryStream(pdfBytes))
             {
-                var pdfFile = new InputOnlineFile(stream, "DarsJadvali.pdf");
+                var pdf = new InputFileStream(stream, "Dars_jadvali.pdf");
 
                 string caption = groupName == "IRB-61"
                 ? $"📌 IRB-61 guruhining dars jadvali\r\n\r\nBoshqa guruh dars jadvalini olish uchun qaytadan\r\n\"📅 Dars jadvali\" tugmasini bosing!\r\n\r\nSana: {DateTime.Now:dd-MM-yyyy, HH:mm:ss}"
                 : $"📌 IRB-62 guruhining dars jadvali\r\n\r\nBoshqa guruh dars jadvalini olish uchun qaytadan\r\n\"📅 Dars jadvali\" tugmasini bosing!\r\n\r\nSana: {DateTime.Now:dd-MM-yyyy, HH:mm:ss}";
 
 
-                await botClient.SendDocumentAsync(
+                await botClient.SendDocument(
                     chatId: update.Message.Chat.Id,
-                    document: pdfFile,
+                    document: pdf,
                     caption: caption
                 );
             }
@@ -244,51 +234,10 @@ public class TelegramBotService
             _logger.LogError($"Exception: {ex.Message}");
 
             // Notify the user of the exception
-            await botClient.SendTextMessageAsync(
+            await botClient.SendMessage(
                 chatId: update.Message.Chat.Id,
                 text: $"❌ Xatolik: {ex.Message}"
             );
-        }
-    }
-
-
-    /// <summary>
-    /// Returns timetable from specific url
-    /// </summary>
-    /// <param name="url"></param>
-    /// <returns></returns>
-    private async Task<byte[]> DownloadTimetableAsPdfAsync(string url)
-    {
-
-        try
-        {
-            var page = await Browser.NewPageAsync();
-
-            await page.GotoAsync(url);
-            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            await page.ClickAsync("text='OK'");
-            await page.WaitForTimeoutAsync(1000);
-            await page.WaitForSelectorAsync("#fitheight");
-            await page.EvaluateAsync("document.getElementById('fitheight').childNodes[0].remove();");
-            await page.WaitForTimeoutAsync(1000);
-
-            // Generate the PDF as a byte array
-            var pdfBytes = await page.PdfAsync(new PagePdfOptions
-            {
-                Landscape = true,
-                PreferCSSPageSize = true,
-                Format = "A4",
-                PrintBackground = true,
-                PageRanges = "2",
-            });
-
-            return pdfBytes;
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e.Message, e.InnerException, e.StackTrace);
-
-            return null;
         }
     }
 

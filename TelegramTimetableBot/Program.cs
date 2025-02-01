@@ -1,8 +1,9 @@
+using Microsoft.Playwright;
 using TelegramTimetableBot;
-using TelegramTimetableBot.Services.TelegramBot;
+using TelegramTimetableBot.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.Configure<TelegramBotOptions>(builder.Configuration.GetSection(TelegramBotOptions.Secrets));
+builder.Services.AddSingleton<IBrowser>();
 builder.Services.AddSingleton<TelegramBotService>();
 builder.Services.AddHostedService<Worker>();
 
