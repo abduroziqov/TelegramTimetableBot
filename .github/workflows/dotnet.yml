@@ -15,10 +15,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Stop service
-      run: sudo -S systemctl stop telegram-bot.service
+      run: echo "P@ssword1" | sudo -S systemctl stop telegram-bot.service
     - name: Restore dependencies
       run: dotnet restore
     - name: Publish
       run: dotnet publish -c Release -o /var/www/TelegramTimetableBot
     - name: Start service
-      run: sudo -S systemctl start telegram-bot.service
+      run: echo "P@ssword1" | sudo -S systemctl start telegram-bot.service
