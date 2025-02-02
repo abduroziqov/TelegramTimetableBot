@@ -17,4 +17,4 @@ jobs:
     - name: Run the Docker container
       run: docker run -d telegram-bot --network host
     - name: Remove unused objects
-      run: docker system prune -y
+      run: docker system prune
