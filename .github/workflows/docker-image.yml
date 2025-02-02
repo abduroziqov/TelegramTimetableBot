@@ -13,6 +13,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker run --detach . --file Dockerfile --tag telegram-bot:$(date +%s) --network host
+      run: docker run --d . --tag telegram-bot:$(date +%s)
     - name: Remove orphan containers
       run: docker system prune -y
