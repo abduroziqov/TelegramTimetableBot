@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag telegram-bot
+      run: docker build ./TelegramTimetableBot --file Dockerfile --tag telegram-bot
     - name: Run the Docker container
       run: docker run -d telegram-bot --network host
     - name: Remove unused objects
