@@ -44,7 +44,7 @@ public class BrowserService
                 await page.WaitForTimeoutAsync(1000);
 
                 // Generate the PDF as a byte array
-                var pdfBytes = await page.PdfAsync(new PagePdfOptions
+                return await page.PdfAsync(new PagePdfOptions
                 {
                     Landscape = true,
                     PreferCSSPageSize = true,
@@ -52,8 +52,6 @@ public class BrowserService
                     PrintBackground = true,
                     PageRanges = "2",
                 });
-
-                return pdfBytes;
             }
 
             return [];
