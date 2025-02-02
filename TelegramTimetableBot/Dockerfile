@@ -1,4 +1,4 @@
-﻿FROM ubuntu/dotnet-aspnet AS base
+﻿FROM ubuntu:24.04 AS base
 USER $APP_UID
 WORKDIR /app
 
@@ -17,7 +17,7 @@ RUN dotnet publish "TelegramTimetableBot.csproj" -c $BUILD_CONFIGURATION -o /app
 
 FROM base AS final
 WORKDIR /app
+RUN apt-get update
+RUN apt-get install -y aspnetcore-runtime-9.0 chromium-browser
 COPY --from=publish /app/publish .
-RUN apt update
-RUN apt install chromium-browser -y
 ENTRYPOINT ["dotnet", "TelegramTimetableBot.dll"]
