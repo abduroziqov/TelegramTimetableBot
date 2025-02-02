@@ -7,36 +7,20 @@ using TelegramTimetableBot.Methods;
 
 namespace TelegramTimetableBot.Services;
 
-public class TelegramBotService
+public class TelegramBotService(
+    IConfiguration configuration,
+    ILogger<TelegramBotService> logger,
+    BrowserService browserService)
 {
-    private          ITelegramBotClient          _telegramBotClient;
-    private readonly ILogger<TelegramBotService> _logger;
-    private readonly BrowserService              _browserService;
-    
-    private readonly ReceiverOptions             _receiverOptions;
+    private          ITelegramBotClient          _telegramBotClient = new TelegramBotClient(configuration["BotToken"]!);
+
+    private readonly ReceiverOptions             _receiverOptions = new() { AllowedUpdates = [] };
     private readonly List<long>                  _userIds = new();
     private string                               _url = "https://tsue.edupage.org/timetable/view.php?num=81&class=-1650";
     private readonly Dictionary<long, DateTime>  _lastTimetableRequestTime = new();
 
     private Task[] Tasks { get; set; } = [];
 
-    public TelegramBotService(IConfiguration configuration, ILogger<TelegramBotService> logger, BrowserService browserService)
-    {
-        _telegramBotClient = new TelegramBotClient(configuration["BotToken"]!);
-        _receiverOptions   = new ReceiverOptions { AllowedUpdates = [] };
-        _logger            = logger;
-        _browserService    = browserService;
-
-        InitializeBrowser();
-    }
-
-    /// <summary>
-    /// Creates and launch single Browser instance
-    /// </summary>
-    private async void InitializeBrowser()
-    {
-        
-    }
     public async Task<User> GetMe() => await _telegramBotClient.GetMe();
     public async Task DeleteWebhook() => await _telegramBotClient.DeleteWebhook();
     public void StartReceiving(CancellationToken cancellationToken) => _telegramBotClient.StartReceiving(HandleUpdateAsync, HandleErrorAsync, _receiverOptions, cancellationToken);
@@ -171,13 +155,13 @@ public class TelegramBotService
                 chatId: update.Message.Chat.Id,
                 text: "Too many requests. Please try later."));
 
-            _logger.LogError($"[HandleUpdateAsync] (@{update.Message.From.Username ?? update.Message.From.FirstName}) {ex.Message}");
+            logger.LogError($"[HandleUpdateAsync] (@{update.Message.From.Username ?? update.Message.From.FirstName}) {ex.Message}");
         }
     }
 
     private async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
-        _logger.LogError(exception.Message);
+        logger.LogError(exception.Message);
 
         await Task.CompletedTask;
     }
@@ -192,11 +176,11 @@ public class TelegramBotService
     private async Task SendTimetablePdfAsync(ITelegramBotClient botClient, Update update, string groupName)
     {
         // Step 1: Download the PDF as a byte array
-        byte[] pdfBytes = await _browserService.DownloadTimetableAsPdfAsync(_url);
+        byte[] pdfBytes = await browserService.DownloadTimetableAsPdfAsync(_url);
 
         if (pdfBytes.Length == 0)
         {
-            _logger.LogError("Failed to generate the PDF.");
+            logger.LogError("Failed to generate the PDF.");
 
             // Notify the user if PDF generation fails
             await botClient.SendMessage(
@@ -206,7 +190,7 @@ public class TelegramBotService
             return;
         }
 
-        _logger.LogInformation("PDF successfully generated in memory.");
+        logger.LogInformation("PDF successfully generated in memory.");
 
         try
         {
@@ -227,11 +211,11 @@ public class TelegramBotService
                 );
             }
 
-            _logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client: {update.Message.From.Username ?? update.Message.From.FirstName} received the timetable.");
+            logger.LogInformation($"[DownloadTimetableAsPdfAsync] Client: {update.Message.From.Username ?? update.Message.From.FirstName} received the timetable.");
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Exception: {ex.Message}");
+            logger.LogError($"Exception: {ex.Message}");
 
             // Notify the user of the exception
             await botClient.SendMessage(
