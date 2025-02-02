@@ -19,5 +19,5 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 RUN apt update
-RUN apt install chromium-browser
+RUN apt install chromium-browser -y
 ENTRYPOINT ["dotnet", "TelegramTimetableBot.dll"]
