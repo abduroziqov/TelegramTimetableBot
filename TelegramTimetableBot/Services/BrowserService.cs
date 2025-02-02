@@ -23,6 +23,7 @@ public class BrowserService
 
         Instance = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
+            ExecutablePath = LinuxPath,
             Headless = true
         });
     }
