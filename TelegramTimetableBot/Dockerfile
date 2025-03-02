@@ -7,9 +7,9 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 RUN pwd
 RUN ls -la
-COPY ["./TelegramTimetableBot.csproj", "."]
+COPY ["./TelegramTimetableBot/TelegramTimetableBot.csproj", "."]
 RUN dotnet restore "TelegramTimetableBot.csproj"
-COPY [".", "."]
+COPY ["./TelegramTimetableBot", "."]
 RUN dotnet publish "TelegramTimetableBot.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
