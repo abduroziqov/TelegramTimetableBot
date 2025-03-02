@@ -5,6 +5,8 @@ FROM alpine AS publish
 RUN apk add dotnet9-sdk
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+RUN pwd
+RUN ls -la
 COPY ["./TelegramTimetableBot.csproj", "."]
 RUN dotnet restore "TelegramTimetableBot.csproj"
 COPY [".", "."]
